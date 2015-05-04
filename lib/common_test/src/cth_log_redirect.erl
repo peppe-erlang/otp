@@ -113,7 +113,17 @@ handle_event({_Type,GL,_Msg}, #eh_state{handle_remote_events = false} = State)
   when node(GL) /= node() ->
     {ok, State};
 handle_event(Event, #eh_state{log_func = LogFunc} = State) ->
-    case lists:keyfind(sasl, 1, application:which_applications()) of
+
+    Apps =
+	try application:which_applications() of
+	    Which -> Which
+	catch
+	    _:ExitReason ->
+		erlang:display(ExitReason),
+		erlang:halt("Deadlock")
+	end,
+
+    case lists:keyfind(sasl, 1, Apps) of
 	false ->
 	    sasl_not_started;
 	_Else ->
